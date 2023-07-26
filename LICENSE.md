@@ -1,0 +1,1 @@
+https://jsmart.cc/core-license
