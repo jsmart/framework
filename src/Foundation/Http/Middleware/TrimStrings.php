@@ -3,7 +3,7 @@
 namespace JSmart\Foundation\Http\Middleware;
 
 use Closure;
-use JSmart\Http\Request;
+use Illuminate\Http\Request;
 
 class TrimStrings
 {

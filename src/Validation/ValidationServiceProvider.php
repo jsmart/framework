@@ -2,7 +2,7 @@
 
 namespace JSmart\Validation;
 
-use JSmart\Http\Request;
+use Illuminate\Http\Request;
 use JSmart\Foundation\ServiceProvider;
 
 class ValidationServiceProvider extends ServiceProvider

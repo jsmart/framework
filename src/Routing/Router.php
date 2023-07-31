@@ -3,7 +3,7 @@
 namespace JSmart\Routing;
 
 use JSmart\Foundation\Application;
-use JSmart\Http\Request;
+use Illuminate\Http\Request;
 use JSmart\Foundation\Pipeline;
 
 use Symfony\Component\Routing\Matcher\UrlMatcher;

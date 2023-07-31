@@ -5,9 +5,8 @@ namespace JSmart\Foundation\Http;
 use Closure;
 use JSmart\Foundation\Application;
 use JSmart\Foundation\Pipeline;
-use JSmart\Http\Request;
-use JSmart\Http\Response;
-//use Illuminate\Http\Response;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class Kernel
 {

@@ -5,8 +5,8 @@ namespace JSmart\Session\Middleware;
 use Closure;
 use Illuminate\Session\SessionManager;
 use Illuminate\Session\Store;
-use JSmart\Http\Request;
-use JSmart\Http\Response;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class StartSession
 {
