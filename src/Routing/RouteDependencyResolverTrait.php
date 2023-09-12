@@ -14,11 +14,6 @@ trait RouteDependencyResolverTrait
 {
     /**
      * Resolve the object method's type-hinted dependencies.
-     *
-     * @param array $parameters
-     * @param object $instance
-     * @param string $method
-     * @return array
      */
     protected function resolveClassMethodDependencies(array $parameters, object $instance, string $method): array
     {
@@ -33,10 +28,6 @@ trait RouteDependencyResolverTrait
 
     /**
      * Resolve the given method's type-hinted dependencies.
-     *
-     * @param array $parameters
-     * @param ReflectionFunctionAbstract $reflector
-     * @return array
      */
     protected function resolveMethodDependencies(array $parameters, ReflectionFunctionAbstract $reflector): array
     {
@@ -64,11 +55,6 @@ trait RouteDependencyResolverTrait
 
     /**
      * Attempt to transform the given parameter into a class instance.
-     *
-     * @param ReflectionParameter $parameter
-     * @param array $parameters
-     * @param object $skippableValue
-     * @return mixed
      */
     protected function transformDependency(ReflectionParameter $parameter, array $parameters, object $skippableValue): mixed
     {
@@ -83,10 +69,6 @@ trait RouteDependencyResolverTrait
 
     /**
      * Determine if an object of the given class is in a list of parameters.
-     *
-     * @param string $class
-     * @param array $parameters
-     * @return bool
      */
     protected function alreadyInParameters(string $class, array $parameters): bool
     {
@@ -97,13 +79,8 @@ trait RouteDependencyResolverTrait
 
     /**
      * Splice the given value into the parameter list.
-     *
-     * @param array  $parameters
-     * @param string $offset
-     * @param mixed $value
-     * @return void
      */
-    protected function spliceIntoParameters(array &$parameters, string $offset, mixed $value)
+    protected function spliceIntoParameters(array &$parameters, string $offset, mixed $value): void
     {
         array_splice(
             $parameters, $offset, 0, [$value]
