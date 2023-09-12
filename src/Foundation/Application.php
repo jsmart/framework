@@ -4,21 +4,18 @@ namespace JSmart\Foundation;
 
 use JSmart\Events\EventServiceProvider;
 use JSmart\Log\LogServiceProvider;
-use JSmart\Foundation\ServiceProvider;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class Application extends \Illuminate\Container\Container
 {
     /**
      * The JSmart framework version.
-     *
-     * @var string
      */
     const VERSION = '3.0.0';
 
     /**
      * The base path for the JSmart installation.
-     *
-     * @var string
      */
     protected string $basePath;
 
@@ -38,25 +35,19 @@ class Application extends \Illuminate\Container\Container
     ];
 
     /**
-     * All of the registered service providers.
-     *
-     * @var ServiceProvider[]
+     * All the registered service providers.
      */
     protected array $serviceProviders = [];
 
     /**
      * The names of the loaded service providers.
-     *
-     * @var array
      */
     protected array $loadedProviders = [];
 
     /**
      * Create a new JSmart application instance.
-     *
-     * @param string|null $basePath
      */
-    public function __construct(string $basePath = null)
+    public function __construct(?string $basePath = null)
     {
         if ($basePath) {
             $this->setBasePath($basePath);
@@ -69,9 +60,6 @@ class Application extends \Illuminate\Container\Container
 
     /**
      * Set the base path for the application.
-     *
-     * @param string $basePath
-     * @return void
      */
     public function setBasePath(string $basePath): void
     {
@@ -80,51 +68,62 @@ class Application extends \Illuminate\Container\Container
 
     /**
      * Get the base path of the JSmart installation.
-     *
-     * @param string $path
-     * @return string
      */
     public function basePath(string $path = ''): string
     {
-        return $this->basePath . ($path != '' ? DIRECTORY_SEPARATOR . $path : '');
+        return $this->joinPaths($this->basePath, $path);
+    }
+
+    /**
+     * Get the path to the application "application" directory.
+     */
+    public function applicationPath(string $path = ''): string
+    {
+        return $this->joinPaths($this->basePath('application'), $path);
     }
 
     /**
      * Get the path to the application configuration files.
-     *
-     * @return string
      */
     public function configPath(): string
     {
-        return $this->basePath('application/config');
+        return $this->joinPaths($this->applicationPath(), 'config');
+    }
+
+    /**
+     * Get the path to the database directory.
+     */
+    public function databasePath(string $path = ''): string
+    {
+        return $this->joinPaths($this->applicationPath('database'), $path);
     }
 
     /**
      * Get the path to the modules dir.
-     *
-     * @param string $path
-     * @return string
      */
     public function modulesPath(string $path = ''): string
     {
-        return $this->basePath('application/modules') . ($path != '' ? DIRECTORY_SEPARATOR . $path : '');
+        return $this->joinPaths($this->applicationPath('modules'), $path);
     }
 
     /**
      * Get the path to the storage dir.
-     *
-     * @param string $path
-     * @return string
      */
     public function storagePath(string $path = ''): string
     {
-        return $this->basePath('application/storage') . ($path != '' ? DIRECTORY_SEPARATOR . $path : '');
+        return $this->joinPaths($this->applicationPath('storage'), $path);
+    }
+
+    /**
+     * Join the given paths together.
+     */
+    public function joinPaths(string $basePath, string $path = ''): string
+    {
+        return $basePath . ($path != '' ? DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR) : '');
     }
 
     /**
      * Determine if the application is running in the console.
-     *
-     * @return bool
      */
     public function runningInConsole(): bool
     {
@@ -133,8 +132,6 @@ class Application extends \Illuminate\Container\Container
 
     /**
      * Register the basic bindings into the container.
-     *
-     * @return void
      */
     protected function registerBaseBindings(): void
     {
@@ -149,8 +146,6 @@ class Application extends \Illuminate\Container\Container
 
     /**
      * Run bootstrap classes.
-     *
-     * @return void
      */
     protected function bootstrap(): void
     {
@@ -161,9 +156,6 @@ class Application extends \Illuminate\Container\Container
 
     /**
      * Register a service provider with the application.
-     *
-     * @param ServiceProvider|string $provider
-     * @return ServiceProvider
      */
     public function register(ServiceProvider|string $provider): ServiceProvider
     {
@@ -196,11 +188,8 @@ class Application extends \Illuminate\Container\Container
 
     /**
      * Get the registered service provider instance if it exists.
-     *
-     * @param ServiceProvider|string $provider
-     * @return ServiceProvider|null
      */
-    public function getProvider(ServiceProvider|string $provider): ServiceProvider|null
+    public function getProvider(ServiceProvider|string $provider): ?ServiceProvider
     {
         $provider = is_string($provider) ? $provider : get_class($provider);
 
@@ -213,9 +202,6 @@ class Application extends \Illuminate\Container\Container
 
     /**
      * Resolve a service provider instance from the class name.
-     *
-     * @param string $provider
-     * @return ServiceProvider
      */
     public function resolveProvider(string $provider): ServiceProvider
     {
@@ -224,9 +210,6 @@ class Application extends \Illuminate\Container\Container
 
     /**
      * Mark the given provider as registered.
-     *
-     * @param ServiceProvider $provider
-     * @return void
      */
     protected function markAsRegistered(ServiceProvider $provider): void
     {
@@ -237,8 +220,6 @@ class Application extends \Illuminate\Container\Container
 
     /**
      * Boot the application's service providers.
-     *
-     * @return void
      */
     public function bootProviders(): void
     {
@@ -249,14 +230,23 @@ class Application extends \Illuminate\Container\Container
 
     /**
      * Boot the given service provider.
-     *
-     * @param ServiceProvider $provider
-     * @return void
      */
     public function bootProvider(ServiceProvider $provider): void
     {
         if (method_exists($provider, 'boot')) {
             $this->call([$provider, 'boot']);
         }
+    }
+
+    /**
+     * Throw an HttpException with the given data.
+     */
+    public function abort(int $code, string $message = '', array $headers = []): never
+    {
+        if ($code == 404) {
+            throw new NotFoundHttpException($message, null, 0, $headers);
+        }
+
+        throw new HttpException($code, $message, null, $headers);
     }
 }
