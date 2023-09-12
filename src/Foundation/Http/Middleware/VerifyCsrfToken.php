@@ -4,24 +4,19 @@ namespace JSmart\Foundation\Http\Middleware;
 
 use ArrayObject;
 use Closure;
-use Illuminate\Session\TokenMismatchException;
 use Illuminate\Http\Request;
+use Illuminate\Session\TokenMismatchException;
 
 class VerifyCsrfToken
 {
     /**
      * The URIs that should be excluded from CSRF verification.
-     *
-     * @var ArrayObject
      */
     protected ArrayObject $except;
 
     /**
      * Handle an incoming request.
      *
-     * @param Request $request
-     * @param Closure $next
-     * @return mixed
      * @throws TokenMismatchException
      */
     public function handle(Request $request, Closure $next): mixed
@@ -30,14 +25,11 @@ class VerifyCsrfToken
             return $next($request);
         }
 
-        throw new \Illuminate\Session\TokenMismatchException('CSRF token mismatch.');
+        throw new TokenMismatchException('CSRF token mismatch.');
     }
 
     /**
      * Determine if the HTTP request uses a ‘read’ verb.
-     *
-     * @param Request $request
-     * @return bool
      */
     protected function isReading(Request $request): bool
     {
@@ -46,9 +38,6 @@ class VerifyCsrfToken
 
     /**
      * Determine if the request has a URI that should pass through CSRF verification.
-     *
-     * @param Request $request
-     * @return bool
      */
     protected function inExceptArray(Request $request): bool
     {
@@ -73,25 +62,19 @@ class VerifyCsrfToken
 
     /**
      * Determine if the session and input CSRF tokens match.
-     *
-     * @param Request $request
-     * @return bool
      */
     protected function tokensMatch(Request $request): bool
     {
         $token = $this->getTokenFromRequest($request);
-        return true;
+
         return is_string(session()->token()) && hash_equals(session()->token(), $token);
     }
 
     /**
      * Get the CSRF token from the request.
-     *
-     * @param Request $request
-     * @return string
      */
     protected function getTokenFromRequest(Request $request): string
     {
-        return $request->post('_token') ?: $request->headers('X-CSRF-TOKEN');
+        return $request->post('_token') ?: $request->header('X-CSRF-TOKEN');
     }
 }
