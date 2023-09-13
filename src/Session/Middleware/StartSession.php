@@ -3,25 +3,21 @@
 namespace JSmart\Session\Middleware;
 
 use Closure;
-use Illuminate\Session\SessionManager;
-use Illuminate\Session\Store;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Session\SessionManager;
+use Illuminate\Session\Store;
+use Symfony\Component\HttpFoundation\Cookie;
 
 class StartSession
 {
     /**
      * The session manager.
-     *
-     * @var SessionManager
      */
     protected SessionManager $manager;
 
     /**
      * Create a new session middleware.
-     *
-     * @param SessionManager $manager
-     * @return void
      */
     public function __construct(SessionManager $manager)
     {
@@ -30,10 +26,6 @@ class StartSession
 
     /**
      * Handle an incoming request.
-     *
-     * @param Request $request
-     * @param Closure $next
-     * @return mixed
      */
     public function handle(Request $request, Closure $next): mixed
     {
@@ -46,15 +38,12 @@ class StartSession
 
     /**
      * Handle the given request within session state.
-     *
-     * @param Request $request
-     * @param Store $session
-     * @param Closure $next
-     * @return mixed
      */
     protected function handleStatefulRequest(Request $request, Store $session, Closure $next): mixed
     {
-        $this->startSession($request, $session);
+        $request->setLaravelSession(
+            $this->startSession($request, $session)
+        );
 
         $this->collectGarbage($session);
 
@@ -63,6 +52,8 @@ class StartSession
         if (!$response instanceof Response) {
             $response = new Response($response);
         }
+
+        $this->storeCurrentUrl($request, $session);
 
         $this->addCookieToResponse($response, $session);
 
@@ -73,10 +64,6 @@ class StartSession
 
     /**
      * Start the session for the given request.
-     *
-     * @param Request $request
-     * @param Store $session
-     * @return Store
      */
     protected function startSession(Request $request, Store $session): Store
     {
@@ -89,9 +76,6 @@ class StartSession
 
     /**
      * Get the session implementation from the manager.
-     *
-     * @param Request $request
-     * @return Store
      */
     public function getSession(Request $request): Store
     {
@@ -102,11 +86,8 @@ class StartSession
 
     /**
      * Remove the garbage from the session if necessary.
-     *
-     * @param Store $session
-     * @return void
      */
-    protected function collectGarbage(Store $session)
+    protected function collectGarbage(Store $session): void
     {
         $config = $this->manager->getSessionConfig();
 
@@ -117,9 +98,6 @@ class StartSession
 
     /**
      * Determine if the configuration odds hit the lottery.
-     *
-     * @param array $config
-     * @return bool
      */
     protected function configHitsLottery(array $config): bool
     {
@@ -127,16 +105,22 @@ class StartSession
     }
 
     /**
-     * Add the session cookie to the application response.
-     *
-     * @param Response $response
-     * @param Store $session
-     * @return void
+     * Store the current URL for the request if necessary.
      */
-    protected function addCookieToResponse(Response $response, Store $session)
+    protected function storeCurrentUrl(Request $request, Store $session): void
+    {
+        if ($request->isMethod('GET') && !$request->ajax() && !$request->prefetch() && !$request->isPrecognitive()) {
+            $session->setPreviousUrl($request->fullUrl());
+        }
+    }
+
+    /**
+     * Add the session cookie to the application response.
+     */
+    protected function addCookieToResponse(Response $response, Store $session): void
     {
         if ($this->sessionIsPersistent($config = $this->manager->getSessionConfig())) {
-            $response->headers->setCookie(new \Symfony\Component\HttpFoundation\Cookie(
+            $response->headers->setCookie(new Cookie(
                 $session->getName(), $session->getId(), $this->getCookieExpirationDate(),
                 $config['path'], $config['domain'], $config['secure'] ?? false,
                 $config['http_only'] ?? true, false, $config['same_site'] ?? null
@@ -146,9 +130,6 @@ class StartSession
 
     /**
      * Save the session data to storage.
-     *
-     * @param Request $request
-     * @return void
      */
     protected function saveSession(Request $request): void
     {
@@ -157,8 +138,6 @@ class StartSession
 
     /**
      * Get the session lifetime in seconds.
-     *
-     * @return int
      */
     protected function getSessionLifetimeInSeconds(): int
     {
@@ -167,8 +146,6 @@ class StartSession
 
     /**
      * Get the cookie lifetime in seconds.
-     *
-     * @return int
      */
     protected function getCookieExpirationDate(): int
     {
@@ -179,8 +156,6 @@ class StartSession
 
     /**
      * Determine if a session driver has been configured.
-     *
-     * @return bool
      */
     protected function sessionConfigured(): bool
     {
@@ -189,9 +164,6 @@ class StartSession
 
     /**
      * Determine if the configured session driver is persistent.
-     *
-     * @param array|null $config
-     * @return bool
      */
     protected function sessionIsPersistent(array $config = null): bool
     {
