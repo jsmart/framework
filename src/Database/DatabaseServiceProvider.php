@@ -14,8 +14,7 @@ class DatabaseServiceProvider extends ServiceProvider
     public function boot(): void
     {
         \Illuminate\Database\Eloquent\Model::setConnectionResolver($this->app['db']);
-
-        #\Illuminate\Database\Eloquent\Model::setEventDispatcher($this->app['events']);
+        \Illuminate\Database\Eloquent\Model::setEventDispatcher($this->app['events']);
     }
 
     /**
